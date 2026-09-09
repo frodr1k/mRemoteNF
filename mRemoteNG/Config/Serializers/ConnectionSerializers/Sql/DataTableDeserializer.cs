@@ -21,7 +21,7 @@ using mRemoteNG.Tree.Root;
 namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
 {
     [SupportedOSPlatform("windows")]
-    public class DataTableDeserializer(ICryptographyProvider cryptographyProvider, SecureString decryptionKey) : IDeserializer<DataTable, ConnectionTreeModel>
+    public class DataTableDeserializer(ICryptographyProvider cryptographyProvider, SecureString decryptionKey) : IDeserializer<DataTable, ConnectionTreeModel>, IConnectionCredentialDecryptor
     {
         private readonly ICryptographyProvider _cryptographyProvider = cryptographyProvider.ThrowIfNull(nameof(cryptographyProvider));
         private readonly SecureString _decryptionKey = decryptionKey.ThrowIfNull(nameof(decryptionKey));
@@ -108,7 +108,8 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
             connectionInfo.Panel = (string)dataRow["Panel"];
             var pw = dataRow["Password"] as string;
             //connectionInfo.Password = DecryptValue(pw ?? "").ConvertToSecureString();
-            connectionInfo.Password = DecryptValue(pw ?? "");
+            // Defer decryption until the value is first accessed (CVE-2023-30367).
+            connectionInfo.LoadEncryptedCredential(AbstractConnectionRecord.EncryptedCredential.Password, pw ?? "", this);
             connectionInfo.Port = (int)dataRow["Port"];
             connectionInfo.PostExtApp = (string)dataRow["PostExtApp"];
             connectionInfo.PreExtApp = (string)dataRow["PreExtApp"];
@@ -116,7 +117,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
             connectionInfo.PuttySession = (string)dataRow["PuttySession"];
             connectionInfo.RDGatewayDomain = (string)dataRow["RDGatewayDomain"];
             connectionInfo.RDGatewayHostname = (string)dataRow["RDGatewayHostname"];
-            connectionInfo.RDGatewayPassword = DecryptValue((string)dataRow["RDGatewayPassword"]);
+            connectionInfo.LoadEncryptedCredential(AbstractConnectionRecord.EncryptedCredential.RDGatewayPassword, (string)dataRow["RDGatewayPassword"], this);
             connectionInfo.RDGatewayUsageMethod = (RDGatewayUsageMethod)Enum.Parse(typeof(RDGatewayUsageMethod), (string)dataRow["RDGatewayUsageMethod"]);
             connectionInfo.RDGatewayUseConnectionCredentials = (RDGatewayUseConnectionCredentials)Enum.Parse(typeof(RDGatewayUseConnectionCredentials), (string)dataRow["RDGatewayUseConnectionCredentials"]);
             connectionInfo.RDGatewayUsername = (string)dataRow["RDGatewayUsername"];
@@ -156,7 +157,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
             connectionInfo.VNCCompression = (ProtocolVNC.Compression)Enum.Parse(typeof(ProtocolVNC.Compression), (string)dataRow["VNCCompression"]);
             connectionInfo.VNCEncoding = (ProtocolVNC.Encoding)Enum.Parse(typeof(ProtocolVNC.Encoding), (string)dataRow["VNCEncoding"]);
             connectionInfo.VNCProxyIP = (string)dataRow["VNCProxyIP"];
-            connectionInfo.VNCProxyPassword = DecryptValue((string)dataRow["VNCProxyPassword"]);
+            connectionInfo.LoadEncryptedCredential(AbstractConnectionRecord.EncryptedCredential.VNCProxyPassword, (string)dataRow["VNCProxyPassword"], this);
             connectionInfo.VNCProxyPort = (int)dataRow["VNCProxyPort"];
             connectionInfo.VNCProxyType = (ProtocolVNC.ProxyType)Enum.Parse(typeof(ProtocolVNC.ProxyType), (string)dataRow["VNCProxyType"]);
             connectionInfo.VNCProxyUsername = (string)dataRow["VNCProxyUsername"];
@@ -257,6 +258,9 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
                 return cipherText;
             }
         }
+
+        // Supports lazy (just-in-time) credential decryption (CVE-2023-30367).
+        string IConnectionCredentialDecryptor.Decrypt(string cipherText) => DecryptValue(cipherText);
 
         private ConnectionTreeModel CreateNodeHierarchy(List<ConnectionInfo> connectionList, DataTable dataTable)
         {

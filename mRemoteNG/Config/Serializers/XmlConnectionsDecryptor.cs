@@ -11,7 +11,7 @@ using mRemoteNG.Tree.Root;
 namespace mRemoteNG.Config.Serializers
 {
     [SupportedOSPlatform("windows")]
-    public class XmlConnectionsDecryptor
+    public class XmlConnectionsDecryptor : IConnectionCredentialDecryptor
     {
         private readonly ICryptographyProvider _cryptographyProvider;
         private readonly RootNodeInfo _rootNodeInfo;

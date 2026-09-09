@@ -10,7 +10,9 @@ namespace mRemoteNG.Security
         {
             if (disableEverything) return;
             SaveUsername = CommonRegistrySettings.AllowSaveUsernames;
-            SavePassword = CommonRegistrySettings.AllowSavePasswords;
+            // When an external credential provider is mandated by policy, local passwords
+            // must never be written to the connections file (Definition of Done).
+            SavePassword = CommonRegistrySettings.AllowSavePasswords && !CommonRegistrySettings.RequireCredentialProvider;
             SaveDomain = true;
             SaveCredentialId = true;
             SaveInheritance = true;

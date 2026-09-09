@@ -1,4 +1,5 @@
 ﻿using mRemoteNG.App;
+using mRemoteNG.Credential.Provider;
 using mRemoteNG.Messages;
 using mRemoteNG.Resources.Language;
 using mRemoteNG.Security;
@@ -228,69 +229,45 @@ namespace mRemoteNG.Connection.Protocol
                         string UserViaAPI = InterfaceControl.Info?.UserViaAPI ?? "";
                         string privatekey = "";
 
-                        // access secret server api if necessary
-                        if (InterfaceControl.Info?.ExternalCredentialProvider == ExternalCredentialProvider.DelineaSecretServer)
+                        // Resolve credentials from an external provider just-in-time if configured.
+                        if (CredentialProviderCatalog.Default.TryGetProvider(InterfaceControl.Info?.ExternalCredentialProvider ?? ExternalCredentialProvider.None, out ICredentialProvider sshCredentialProvider))
                         {
-                            try
+                            CredentialProviderResult resolved = new()
                             {
-                                ExternalConnectors.DSS.SecretServerInterface.FetchSecretFromServer($"{UserViaAPI}", out username, out password, out _, out privatekey);
+                                Username = username,
+                                Password = password,
+                                PrivateKey = privatekey
+                            };
 
-                                if (!string.IsNullOrEmpty(privatekey))
+                            sshCredentialProvider.Populate(
+                                new CredentialProviderRequest
                                 {
-                                    optionalTemporaryPrivateKeyPath = Path.GetTempFileName();
-                                    File.WriteAllText(optionalTemporaryPrivateKeyPath, privatekey);
-                                    FileInfo fileInfo = new(optionalTemporaryPrivateKeyPath)
-                                    {
-                                        Attributes = FileAttributes.Temporary
-                                    };
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Event_ErrorOccured(this, "Secret Server Interface Error: " + ex.Message, 0);
-                            }
-                        }
-                        else if (InterfaceControl.Info?.ExternalCredentialProvider == ExternalCredentialProvider.ClickstudiosPasswordState)
-                        {
-                            try
-                            {
-                                ExternalConnectors.CPS.PasswordstateInterface.FetchSecretFromServer($"{UserViaAPI}", out username, out password, out _, out privatekey);
+                                    Usage = CredentialProviderUsage.SshConnection,
+                                    CredentialId = UserViaAPI,
+                                    Username = InterfaceControl.Info?.Username,
+                                    Hostname = InterfaceControl.Info?.Hostname ?? "",
+                                    VaultSecretEngine = InterfaceControl.Info?.VaultOpenbaoSecretEngine ?? VaultOpenbaoSecretEngine.Kv,
+                                    VaultMount = InterfaceControl.Info?.VaultOpenbaoMount ?? "",
+                                    VaultRole = InterfaceControl.Info?.VaultOpenbaoRole ?? ""
+                                },
+                                resolved,
+                                message => Event_ErrorOccured(this, message, 0));
 
-                                if (!string.IsNullOrEmpty(privatekey))
+                            username = resolved.Username;
+                            password = resolved.Password;
+                            privatekey = resolved.PrivateKey;
+
+                            if (!string.IsNullOrEmpty(privatekey))
+                            {
+                                optionalTemporaryPrivateKeyPath = Path.GetTempFileName();
+                                File.WriteAllText(optionalTemporaryPrivateKeyPath, privatekey);
+                                FileInfo fileInfo = new(optionalTemporaryPrivateKeyPath)
                                 {
-                                    optionalTemporaryPrivateKeyPath = Path.GetTempFileName();
-                                    File.WriteAllText(optionalTemporaryPrivateKeyPath, privatekey);
-                                    FileInfo fileInfo = new(optionalTemporaryPrivateKeyPath)
-                                    {
-                                        Attributes = FileAttributes.Temporary
-                                    };
-                                }
+                                    Attributes = FileAttributes.Temporary
+                                };
                             }
-                            catch (Exception ex)
-                            {
-                                Event_ErrorOccured(this, "Passwordstate Interface Error: " + ex.Message, 0);
-                            }
-                        }
-                        else if (InterfaceControl.Info?.ExternalCredentialProvider == ExternalCredentialProvider.OnePassword) {
-                            try
-                            {
-                                ExternalConnectors.OP.OnePasswordCli.ReadPassword($"{UserViaAPI}", out username, out password, out _, out privatekey);
-                            }
-                            catch (ExternalConnectors.OP.OnePasswordCliException ex)
-                            {
-                                Runtime.MessageCollector.AddMessage(MessageClass.InformationMsg, Language.ECPOnePasswordCommandLine + ": " + ex.Arguments);
-                                Runtime.MessageCollector.AddMessage(MessageClass.ErrorMsg, Language.ECPOnePasswordReadFailed + Environment.NewLine + ex.Message);
-                            }
-                        }
-                        else if (InterfaceControl.Info?.ExternalCredentialProvider == ExternalCredentialProvider.VaultOpenbao) {
-                            try {
-                                if (InterfaceControl.Info?.VaultOpenbaoSecretEngine == VaultOpenbaoSecretEngine.SSHOTP)
-                                    ExternalConnectors.VO.VaultOpenbao.ReadOtpSSH($"{InterfaceControl.Info?.VaultOpenbaoMount}", $"{InterfaceControl.Info?.VaultOpenbaoRole}", $"{InterfaceControl.Info?.Username}", $"{InterfaceControl.Info?.Hostname}", out password);
-                                else
-                                    ExternalConnectors.VO.VaultOpenbao.ReadPasswordSSH((int)InterfaceControl.Info?.VaultOpenbaoSecretEngine, InterfaceControl.Info?.VaultOpenbaoMount ?? "", InterfaceControl.Info?.VaultOpenbaoRole ?? "", InterfaceControl.Info?.Username ?? "root", out password);
-                            } catch (ExternalConnectors.VO.VaultOpenbaoException ex) {
-                                Event_ErrorOccured(this, "Secret Server Interface Error: " + ex.Message, 0);
-                            }
+
+                            resolved.Purge();
                         }
 
                         if (string.IsNullOrEmpty(username))

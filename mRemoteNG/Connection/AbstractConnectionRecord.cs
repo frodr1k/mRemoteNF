@@ -6,6 +6,7 @@ using mRemoteNG.Connection.Protocol.Http;
 using mRemoteNG.Connection.Protocol.RDP;
 using mRemoteNG.Connection.Protocol.VNC;
 using mRemoteNG.Properties;
+using mRemoteNG.Security;
 using mRemoteNG.Tools;
 using mRemoteNG.Tools.Attributes;
 using mRemoteNG.Resources.Language;
@@ -118,6 +119,17 @@ namespace mRemoteNG.Connection
         private ProtocolVNC.Colors _vncColors;
         private ProtocolVNC.SmartSizeMode _vncSmartSizeMode;
         private bool _vncViewOnly;
+
+        // Lazy credential decryption (CVE-2023-30367 mitigation).
+        // When a connection is loaded from a config file the encrypted credential
+        // strings are stored as-is and only decrypted on first access (i.e. when a
+        // session is opened or the value is edited), instead of being decrypted into
+        // memory at application startup.
+        private IConnectionCredentialDecryptor _credentialDecryptor;
+        private bool _passwordEncrypted;
+        private bool _rdGatewayPasswordEncrypted;
+        private bool _rdGatewayAccessTokenEncrypted;
+        private bool _vncProxyPasswordEncrypted;
 
         #endregion
 
@@ -259,8 +271,12 @@ namespace mRemoteNG.Connection
         //public virtual SecureString Password
         public virtual string Password
         {
-            get => GetPropertyValue("Password", _password);
-            set => SetField(ref _password, value, "Password");
+            get => GetPropertyValue("Password", ResolveEncryptedValue(ref _password, ref _passwordEncrypted));
+            set
+            {
+                _passwordEncrypted = false;
+                SetField(ref _password, value, "Password");
+            }
         }
 
         [LocalizedAttributes.LocalizedCategory(nameof(Language.Connection), 2),
@@ -612,8 +628,12 @@ namespace mRemoteNG.Connection
          AttributeUsedInProtocol(ProtocolType.RDP)]
         public string RDGatewayPassword
         {
-            get => GetPropertyValue("RDGatewayPassword", _rdGatewayPassword);
-            set => SetField(ref _rdGatewayPassword, value, "RDGatewayPassword");
+            get => GetPropertyValue("RDGatewayPassword", ResolveEncryptedValue(ref _rdGatewayPassword, ref _rdGatewayPasswordEncrypted));
+            set
+            {
+                _rdGatewayPasswordEncrypted = false;
+                SetField(ref _rdGatewayPassword, value, "RDGatewayPassword");
+            }
         }
 
         [LocalizedAttributes.LocalizedCategory(nameof(Language.RDPGateway), 4),
@@ -623,8 +643,12 @@ namespace mRemoteNG.Connection
         AttributeUsedInProtocol(ProtocolType.RDP)]
         public string RDGatewayAccessToken
         {
-            get => GetPropertyValue("RDGatewayAccessToken", _rdGatewayAccessToken);
-            set => SetField(ref _rdGatewayAccessToken, value, "RDGatewayAccessToken");
+            get => GetPropertyValue("RDGatewayAccessToken", ResolveEncryptedValue(ref _rdGatewayAccessToken, ref _rdGatewayAccessTokenEncrypted));
+            set
+            {
+                _rdGatewayAccessTokenEncrypted = false;
+                SetField(ref _rdGatewayAccessToken, value, "RDGatewayAccessToken");
+            }
         }
 
         [LocalizedAttributes.LocalizedCategory(nameof(Language.RDPGateway), 4),
@@ -1084,8 +1108,12 @@ namespace mRemoteNG.Connection
             Browsable(false)]
         public string VNCProxyPassword
         {
-            get => GetPropertyValue("VNCProxyPassword", _vncProxyPassword);
-            set => SetField(ref _vncProxyPassword, value, "VNCProxyPassword");
+            get => GetPropertyValue("VNCProxyPassword", ResolveEncryptedValue(ref _vncProxyPassword, ref _vncProxyPasswordEncrypted));
+            set
+            {
+                _vncProxyPasswordEncrypted = false;
+                SetField(ref _vncProxyPassword, value, "VNCProxyPassword");
+            }
         }
 
         [LocalizedAttributes.LocalizedCategory(nameof(Language.Appearance), 5),
@@ -1143,5 +1171,70 @@ namespace mRemoteNG.Connection
             field = value;
             RaisePropertyChangedEvent(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        #region Lazy credential decryption (CVE-2023-30367)
+
+        /// <summary>
+        /// Stores an encrypted credential value that will be decrypted on first
+        /// access rather than at load time. Passing <c>null</c>/empty ciphertext
+        /// stores the value directly with no pending decryption.
+        /// </summary>
+        internal void LoadEncryptedCredential(EncryptedCredential credential, string cipherText, IConnectionCredentialDecryptor decryptor)
+        {
+            bool isEncrypted = !string.IsNullOrEmpty(cipherText) && decryptor != null;
+            switch (credential)
+            {
+                case EncryptedCredential.Password:
+                    _password = cipherText;
+                    _passwordEncrypted = isEncrypted;
+                    break;
+                case EncryptedCredential.RDGatewayPassword:
+                    _rdGatewayPassword = cipherText;
+                    _rdGatewayPasswordEncrypted = isEncrypted;
+                    break;
+                case EncryptedCredential.RDGatewayAccessToken:
+                    _rdGatewayAccessToken = cipherText;
+                    _rdGatewayAccessTokenEncrypted = isEncrypted;
+                    break;
+                case EncryptedCredential.VNCProxyPassword:
+                    _vncProxyPassword = cipherText;
+                    _vncProxyPasswordEncrypted = isEncrypted;
+                    break;
+            }
+
+            if (isEncrypted)
+                _credentialDecryptor = decryptor;
+        }
+
+        /// <summary>
+        /// Returns the plaintext value of a credential field, decrypting it on
+        /// demand the first time it is accessed. After decryption the plaintext
+        /// replaces the stored ciphertext so the relatively expensive key
+        /// derivation only runs once per credential.
+        /// </summary>
+        private string ResolveEncryptedValue(ref string field, ref bool isEncrypted)
+        {
+            if (isEncrypted && _credentialDecryptor != null && !string.IsNullOrEmpty(field))
+            {
+                field = _credentialDecryptor.Decrypt(field);
+                isEncrypted = false;
+            }
+
+            return field;
+        }
+
+        /// <summary>
+        /// Identifies the encrypted credential fields supported by
+        /// <see cref="LoadEncryptedCredential"/>.
+        /// </summary>
+        internal enum EncryptedCredential
+        {
+            Password,
+            RDGatewayPassword,
+            RDGatewayAccessToken,
+            VNCProxyPassword
+        }
+
+        #endregion
     }
 }

@@ -216,7 +216,8 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Xml
                     if (!Runtime.UseCredentialManager || _confVersion <= 2.6) // 0.2 - 2.6
                     {
                         connectionInfo.Username = xmlnode.GetAttributeAsString("Username");
-                        connectionInfo.Password = _decryptor.Decrypt(xmlnode.GetAttributeAsString("Password"));
+                        // Defer decryption until the value is first accessed (CVE-2023-30367).
+                        connectionInfo.LoadEncryptedCredential(AbstractConnectionRecord.EncryptedCredential.Password, xmlnode.GetAttributeAsString("Password"), _decryptor);
                         //connectionInfo.Password = _decryptor.Decrypt(xmlnode.GetAttributeAsString("Password")).ConvertToSecureString();
                         connectionInfo.Domain = xmlnode.GetAttributeAsString("Domain");
                     }
@@ -385,7 +386,8 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Xml
                     connectionInfo.VNCProxyIP = xmlnode.GetAttributeAsString("VNCProxyIP");
                     connectionInfo.VNCProxyPort = xmlnode.GetAttributeAsInt("VNCProxyPort");
                     connectionInfo.VNCProxyUsername = xmlnode.GetAttributeAsString("VNCProxyUsername");
-                    connectionInfo.VNCProxyPassword = _decryptor.Decrypt(xmlnode.GetAttributeAsString("VNCProxyPassword"));
+                    // Defer decryption until the value is first accessed (CVE-2023-30367).
+                    connectionInfo.LoadEncryptedCredential(AbstractConnectionRecord.EncryptedCredential.VNCProxyPassword, xmlnode.GetAttributeAsString("VNCProxyPassword"), _decryptor);
                     connectionInfo.VNCColors = xmlnode.GetAttributeAsEnum<ProtocolVNC.Colors>("VNCColors");
                     connectionInfo.VNCSmartSizeMode = xmlnode.GetAttributeAsEnum<ProtocolVNC.SmartSizeMode>("VNCSmartSizeMode");
                     connectionInfo.VNCViewOnly = xmlnode.GetAttributeAsBool("VNCViewOnly");
@@ -435,8 +437,9 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Xml
                     connectionInfo.RDGatewayHostname = xmlnode.GetAttributeAsString("RDGatewayHostname");
                     connectionInfo.RDGatewayUseConnectionCredentials = xmlnode.GetAttributeAsEnum<RDGatewayUseConnectionCredentials>("RDGatewayUseConnectionCredentials");
                     connectionInfo.RDGatewayUsername = xmlnode.GetAttributeAsString("RDGatewayUsername");
-                    connectionInfo.RDGatewayPassword = _decryptor.Decrypt(xmlnode.GetAttributeAsString("RDGatewayPassword"));
-                    connectionInfo.RDGatewayAccessToken = _decryptor.Decrypt(xmlnode.GetAttributeAsString("RDGatewayAccessToken"));
+                    // Defer decryption until the value is first accessed (CVE-2023-30367).
+                    connectionInfo.LoadEncryptedCredential(AbstractConnectionRecord.EncryptedCredential.RDGatewayPassword, xmlnode.GetAttributeAsString("RDGatewayPassword"), _decryptor);
+                    connectionInfo.LoadEncryptedCredential(AbstractConnectionRecord.EncryptedCredential.RDGatewayAccessToken, xmlnode.GetAttributeAsString("RDGatewayAccessToken"), _decryptor);
                     connectionInfo.RDGatewayDomain = xmlnode.GetAttributeAsString("RDGatewayDomain");
 
                     // Get inheritance settings

@@ -1,0 +1,112 @@
+name: Security Dependency Scan
+
+# Priority 4 - Dependency Review
+# Runs OWASP Dependency-Check, Snyk and GitHub's dependency-review on the
+# solution's NuGet dependencies. Results are uploaded to the GitHub
+# Security -> Code scanning dashboard as SARIF where supported.
+#
+# Note: NuGet/GitHub-Actions version bumps are handled by Renovate (see
+# renovate.json). This workflow focuses on vulnerability *analysis* only, so it
+# does not duplicate Renovate's update pull requests.
+
+on:
+  push:
+    branches:
+      - v1.78.2-dev
+  pull_request:
+    branches:
+      - v1.78.2-dev
+  schedule:
+    # Weekly, Monday 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  owasp-dependency-check:
+    name: OWASP Dependency-Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: mRemoteNG
+          path: .
+          format: SARIF
+          # Fail the job when a CVE with CVSS >= 7 (High) is found.
+          args: >-
+            --failOnCVSS 7
+            --enableExperimental
+        env:
+          # Optional: set an NVD API key (repository secret) to speed up the
+          # vulnerability database download and avoid rate limiting.
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+      - name: Upload Dependency-Check SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/dependency-check-report.sarif
+          category: owasp-dependency-check
+
+      - name: Archive Dependency-Check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: reports
+          if-no-files-found: ignore
+
+  snyk:
+    name: Snyk
+    runs-on: ubuntu-latest
+    # Snyk requires a token. Skip gracefully (do not fail the run) when the
+    # SNYK_TOKEN secret has not been configured.
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run Snyk test (SARIF)
+        continue-on-error: true
+        uses: snyk/actions/dotnet@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: >-
+            --file=mRemoteNG.sln
+            --sarif-file-output=snyk.sarif
+            --severity-threshold=high
+
+      - name: Upload Snyk SARIF
+        if: always() && hashFiles('snyk.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk.sarif
+          category: snyk
+
+  dependency-review:
+    name: GitHub Dependency Review
+    runs-on: ubuntu-latest
+    # dependency-review-action only runs on pull requests.
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

@@ -1,5 +1,6 @@
 ﻿using AxMSTSCLib;
 using mRemoteNG.App;
+using mRemoteNG.Credential.Provider;
 using mRemoteNG.Messages;
 using mRemoteNG.Properties;
 using mRemoteNG.Resources.Language;
@@ -470,53 +471,36 @@ namespace mRemoteNG.Connection.Protocol.RDP
                             string gwd = connectionInfo.RDGatewayDomain;
                             string pkey = "";
 
-                        // access secret server api if necessary
-                        if (InterfaceControl.Info.RDGatewayExternalCredentialProvider == ExternalCredentialProvider.DelineaSecretServer)
+                        // Resolve RD Gateway credentials from an external provider just-in-time if configured.
+                        if (CredentialProviderCatalog.Default.TryGetProvider(InterfaceControl.Info.RDGatewayExternalCredentialProvider, out ICredentialProvider gatewayCredentialProvider))
                         {
-                            try
+                            CredentialProviderResult resolvedGateway = new()
                             {
-                                string RDGUserViaAPI = InterfaceControl.Info.RDGatewayUserViaAPI;
-                                ExternalConnectors.DSS.SecretServerInterface.FetchSecretFromServer($"{RDGUserViaAPI}", out gwu, out gwp, out gwd, out pkey);
-                            }
-                            catch (Exception ex)
-                            {
-                                Event_ErrorOccured(this, "Secret Server Interface Error: " + ex.Message, 0);
-                            }
-                        }
-                        else if (InterfaceControl.Info.ExternalCredentialProvider == ExternalCredentialProvider.ClickstudiosPasswordState)
-                        {
-                            try
-                            {
-                                string RDGUserViaAPI = InterfaceControl.Info.RDGatewayUserViaAPI;
-                                ExternalConnectors.CPS.PasswordstateInterface.FetchSecretFromServer($"{RDGUserViaAPI}", out gwu, out gwp, out gwd, out pkey);
-                            }
-                            catch (Exception ex)
-                            {
-                                Event_ErrorOccured(this, "Passwordstate Interface Error: " + ex.Message, 0);
-                            }
-                        }
-                        else if (InterfaceControl.Info.ExternalCredentialProvider == ExternalCredentialProvider.OnePassword)
-                        {
-                            try
-                            {
-                                string RDGUserViaAPI = InterfaceControl.Info.RDGatewayUserViaAPI;
-                                ExternalConnectors.OP.OnePasswordCli.ReadPassword($"{RDGUserViaAPI}", out gwu, out gwp, out gwd, out pkey);
-                            }
-                            catch (ExternalConnectors.OP.OnePasswordCliException ex)
-                            {
-                                Runtime.MessageCollector.AddMessage(MessageClass.InformationMsg, Language.ECPOnePasswordCommandLine + ": " + ex.Arguments);
-                                Runtime.MessageCollector.AddMessage(MessageClass.ErrorMsg, Language.ECPOnePasswordReadFailed + Environment.NewLine + ex.Message);
-                            }
-                        }
-                        else if (InterfaceControl.Info.ExternalCredentialProvider == ExternalCredentialProvider.VaultOpenbao)
-                        {
-                            try {
-                                if (connectionInfo.VaultOpenbaoSecretEngine == VaultOpenbaoSecretEngine.Kv)
-                                    gwu = connectionInfo.RDGatewayUsername;
-                                ExternalConnectors.VO.VaultOpenbao.ReadPasswordRDP((int)connectionInfo.VaultOpenbaoSecretEngine, connectionInfo.VaultOpenbaoMount, connectionInfo.VaultOpenbaoRole, ref gwu, out gwp);
-                            } catch (ExternalConnectors.VO.VaultOpenbaoException ex) {
-                                Event_ErrorOccured(this, "Secret Server Interface Error: " + ex.Message, 0);
-                            }
+                                Username = gwu,
+                                Password = gwp,
+                                Domain = gwd,
+                                PrivateKey = pkey
+                            };
+
+                            gatewayCredentialProvider.Populate(
+                                new CredentialProviderRequest
+                                {
+                                    Usage = CredentialProviderUsage.RdpGateway,
+                                    CredentialId = InterfaceControl.Info.RDGatewayUserViaAPI,
+                                    Username = connectionInfo.RDGatewayUsername,
+                                    Hostname = connectionInfo.RDGatewayHostname ?? "",
+                                    VaultSecretEngine = connectionInfo.VaultOpenbaoSecretEngine,
+                                    VaultMount = connectionInfo.VaultOpenbaoMount ?? "",
+                                    VaultRole = connectionInfo.VaultOpenbaoRole ?? ""
+                                },
+                                resolvedGateway,
+                                message => Event_ErrorOccured(this, message, 0));
+
+                            gwu = resolvedGateway.Username;
+                            gwp = resolvedGateway.Password;
+                            gwd = resolvedGateway.Domain;
+                            pkey = resolvedGateway.PrivateKey;
+                            resolvedGateway.Purge();
                         }
 
 
@@ -595,49 +579,36 @@ namespace mRemoteNG.Connection.Protocol.RDP
                 //string password = (connectionInfo?.Password?.ConvertToUnsecureString() ?? "");
                 string password = (connectionInfo?.Password ?? "");
 
-                // access secret server api if necessary
-                if (InterfaceControl.Info.ExternalCredentialProvider == ExternalCredentialProvider.DelineaSecretServer)
+                // Resolve credentials from an external provider just-in-time if configured.
+                if (CredentialProviderCatalog.Default.TryGetProvider(InterfaceControl.Info.ExternalCredentialProvider, out ICredentialProvider credentialProvider))
                 {
-                    try
+                    CredentialProviderResult resolved = new()
                     {
-                        ExternalConnectors.DSS.SecretServerInterface.FetchSecretFromServer($"{userViaApi}", out userName, out password, out domain, out pkey);
-                    }
-                    catch (Exception ex)
-                    {
-                        Event_ErrorOccured(this, "Secret Server Interface Error: " + ex.Message, 0);
-                    }
-                }
-                else if (InterfaceControl.Info.ExternalCredentialProvider == ExternalCredentialProvider.ClickstudiosPasswordState)
-                {
-                    try
-                    {
-                        ExternalConnectors.CPS.PasswordstateInterface.FetchSecretFromServer($"{userViaApi}", out userName, out password, out domain, out pkey);
-                    }
-                    catch (Exception ex)
-                    {
-                        Event_ErrorOccured(this, "Passwordstate Interface Error: " + ex.Message, 0);
-                    }
-                }
-                else if (InterfaceControl.Info.ExternalCredentialProvider == ExternalCredentialProvider.OnePassword)
-                {
-                    try
-                    {
-                        ExternalConnectors.OP.OnePasswordCli.ReadPassword($"{userViaApi}", out userName, out password, out domain, out pkey);
-                    }
-                    catch (ExternalConnectors.OP.OnePasswordCliException ex)
-                    {
-                        Runtime.MessageCollector.AddMessage(MessageClass.InformationMsg, Language.ECPOnePasswordCommandLine + ": " + ex.Arguments);
-                        Runtime.MessageCollector.AddMessage(MessageClass.ErrorMsg, Language.ECPOnePasswordReadFailed + Environment.NewLine + ex.Message);
-                    }
-                }
-                else if (InterfaceControl.Info.ExternalCredentialProvider == ExternalCredentialProvider.VaultOpenbao) {
-                    try {
-                        if(connectionInfo.VaultOpenbaoSecretEngine == VaultOpenbaoSecretEngine.Kv)
-                            userName = connectionInfo?.Username ?? "";
-                        ExternalConnectors.VO.VaultOpenbao.ReadPasswordRDP((int)connectionInfo.VaultOpenbaoSecretEngine, connectionInfo?.VaultOpenbaoMount ?? "", connectionInfo?.VaultOpenbaoRole ?? "", ref userName, out password);
-                    } catch (ExternalConnectors.VO.VaultOpenbaoException ex) {
-                        Event_ErrorOccured(this, "Secret Server Interface Error: " + ex.Message, 0);
-                    }
+                        Username = userName,
+                        Password = password,
+                        Domain = domain,
+                        PrivateKey = pkey
+                    };
+
+                    credentialProvider.Populate(
+                        new CredentialProviderRequest
+                        {
+                            Usage = CredentialProviderUsage.RdpConnection,
+                            CredentialId = userViaApi,
+                            Username = connectionInfo?.Username,
+                            Hostname = connectionInfo?.Hostname ?? "",
+                            VaultSecretEngine = connectionInfo?.VaultOpenbaoSecretEngine ?? VaultOpenbaoSecretEngine.Kv,
+                            VaultMount = connectionInfo?.VaultOpenbaoMount ?? "",
+                            VaultRole = connectionInfo?.VaultOpenbaoRole ?? ""
+                        },
+                        resolved,
+                        message => Event_ErrorOccured(this, message, 0));
+
+                    userName = resolved.Username;
+                    password = resolved.Password;
+                    domain = resolved.Domain;
+                    pkey = resolved.PrivateKey;
+                    resolved.Purge();
                 }
 
                 if (string.IsNullOrEmpty(userName))

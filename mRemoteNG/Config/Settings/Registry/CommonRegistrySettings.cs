@@ -59,6 +59,14 @@ namespace mRemoteNG.Config.Settings.Registry
         /// </summary>
         public static bool AllowSaveUsernames { get; }
 
+        /// <summary>
+        /// Specifies whether connections must obtain their credentials from an external
+        /// credential provider. When true, mRemoteNG will not persist local passwords to
+        /// the connections file (they must be supplied just-in-time by a provider such as
+        /// Passwordstate). Default value is false to preserve existing behaviour.
+        /// </summary>
+        public static bool RequireCredentialProvider { get; }
+
         #endregion
 
         #region general notification registry settings
@@ -104,6 +112,7 @@ namespace mRemoteNG.Config.Settings.Registry
             AllowExportUsernames = regValueUtility.GetBoolValue(hive, credentialSubkey, nameof(AllowExportUsernames), true);
             AllowSavePasswords = regValueUtility.GetBoolValue(hive, credentialSubkey, nameof(AllowSavePasswords), true);
             AllowSaveUsernames = regValueUtility.GetBoolValue(hive, credentialSubkey, nameof(AllowSaveUsernames), true);
+            RequireCredentialProvider = regValueUtility.GetBoolValue(hive, credentialSubkey, nameof(RequireCredentialProvider), false);
 
             #endregion
 

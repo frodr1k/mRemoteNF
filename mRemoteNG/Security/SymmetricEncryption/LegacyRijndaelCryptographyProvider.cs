@@ -11,6 +11,19 @@ using mRemoteNG.Resources.Language;
 
 namespace mRemoteNG.Security.SymmetricEncryption
 {
+    /// <summary>
+    /// DEPRECATED - insecure legacy cryptography provider.
+    /// <para>
+    /// This provider derives its key with a single MD5 hash and provides no
+    /// authentication/integrity protection. It is retained ONLY to decrypt data
+    /// written by older versions of mRemoteNG (legacy connection files and legacy
+    /// settings values). It MUST NOT be used to encrypt new connection
+    /// credentials - use the AEAD provider produced by
+    /// <see cref="Factories.CryptoProviderFactoryFromSettings"/> instead. Values
+    /// still read through this provider should be re-encrypted with the modern
+    /// AEAD provider on the next save.
+    /// </para>
+    /// </summary>
     [SupportedOSPlatform("windows")]
     public class LegacyRijndaelCryptographyProvider : ICryptographyProvider
     {

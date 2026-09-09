@@ -78,6 +78,28 @@ Specifies whether the saving of passwords for saved connections is allowed.
    Additionally, new connections will not be able to store passwords.
 
 
+Require Credential Provider
+---------------------------
+Specifies whether connections must obtain their credentials from an external credential
+provider (for example Click Studios Passwordstate). When enabled, mRemoteNG will not persist
+local passwords to the connections file; passwords are expected to be supplied just-in-time by
+a credential provider when a session is opened.
+
+- **Value Name:** ``RequireCredentialProvider``
+- **Value Type:** ``REG_SZ``
+- **Default value:** ``false``
+- **Values:**
+
+  - Require external provider (do not save local passwords): ``true``
+
+
+.. note::
+   When **RequireCredentialProvider** is set to ``true`` the effect on password saving is the
+   same as setting **AllowSavePasswords** to ``false`` - stored passwords persist until the
+   connection is modified or used and are then removed, and new connections cannot store local
+   passwords.
+
+
 Options
 =======
 Configure the options page to modify functionalities as described.
