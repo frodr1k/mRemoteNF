@@ -7,6 +7,25 @@
 
 ---
 
+## Security differences vs. the forked mRemoteNG baseline
+
+The following hardening has been applied on top of the upstream mRemoteNG version we forked from:
+
+* **CVE-2023-30367 — lazy credential decryption:** Passwords are no longer decrypted when a connection file is loaded; decryption is deferred until a session is actually opened. This mitigates the memory-scraping disclosure described in CVE-2023-30367, where all stored credentials could be dumped from process memory at load time.
+* **Certificate hostname validation (Passwordstate):** A TLS certificate whose hostname does not match is now always rejected, even when "Trust invalid certificate" is enabled — only expired/self-signed chains are tolerated. This closes the classic man-in-the-middle vector that the original blanket-trust behaviour allowed.
+* **HTTPS enforcement for Passwordstate:** Plain HTTP calls can be centrally blocked via Group Policy (`HKLM\SOFTWARE\Policies\mRemoteNF\Passwordstate\RequireHttps = 1`), and a non-blocking warning is shown otherwise. This prevents credentials being sent in clear text.
+* **Stronger key derivation:** The default PBKDF2 iteration count was raised from 10,000 to 50,000, making brute-force attacks on the master password materially harder. Existing files stay compatible because they carry their own iteration count.
+* **Default-encryption-key warning:** A warning is raised when a connection file is protected only by the built-in default key, so users are alerted that their passwords are effectively unencrypted at rest.
+* **SSH temporary key protection:** Temporary private-key files written for PuTTY are now ACL-restricted to the current user and their contents are overwritten before deletion, reducing the window for local key theft.
+* **PuTTY argument-injection hardening:** Dangerous SSHOptions flags (`-m`, `-pw`, `-pwfile`, `-i`, `-auth-plugin`) are rejected, preventing a malicious imported connection file from injecting command execution or credential-leaking arguments.
+* **Registry and configuration isolation:** mRemoteNF shares no registry keys, config/data paths, log file, single-instance mutex or connector keys with mRemoteNG, so a compromised or misconfigured mRemoteNG install cannot influence mRemoteNF (and vice versa).
+* **Distinct binary identity for scanning:** All executables, libraries, metadata and installer identity are rebranded to `mRemoteNF`, so AV/EDR and software-inventory tooling can track and police it independently of upstream mRemoteNG.
+* **Disabled auto-update / external links:** The in-app update check and outbound help links (donate, forum, chat, etc.) are removed or disabled, shrinking the attack surface for update-channel hijacking and unexpected outbound requests.
+
+> Note: The distributed MSI and executables are currently **not code-signed**; sign them with a trusted certificate before deploying in environments enforcing AppLocker/WDAC or SmartScreen.
+
+---
+
 
 
   
