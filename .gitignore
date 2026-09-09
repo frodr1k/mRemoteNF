@@ -287,3 +287,7 @@ InstallerProjects/Installer/Resources/License.rtf
 **/mRemoteNG/Properties/AssemblyInfo.tt
 **/mRemoteNG/Properties/AssemblyInfo.cs
 /.cr/personal/FavoritesList
+
+# Local distribution output (installer/portable packages). These are large
+# binaries that belong in GitHub Releases, not in the git repository.
+/dist/
