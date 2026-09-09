@@ -7,58 +7,11 @@
 
 ---
 
-<p align="Left">
-	Developing mRemoteNG to its fullest potential is my personal priority.<br>
-While the project remains non-commercial, it does come with ongoing costs — including VPS hosting for testing, AI tools, domain fees, and more. <br> If you find value in mRemoteNG and want to support its future, even a small donation from our community can make a huge difference.<br>
-Your support helps me keep the project secure, modern, and accessible for everyone who relies on it — and brings us closer to a brighter, more collaborative future.<br><br>
-Consider donating — every contribution counts!
-	<br><br>
-	<a href="https://www.paypal.com/paypalme/mremoteng">
-    	<img height='36' alt="PayPal" style='border:0px;height:36px;' src="https://img.shields.io/badge/%24-PayPal-blue.svg?label=Donate&logo=PayPal&style=flat-square">
-	</a><br>
-	<a href='https://ko-fi.com/Q5Q41I7JS' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-  </a>
-</p>
 
----
 
-<p align="center">
-  <img width="450" src="https://github.com/mRemoteNG/mRemoteNG/blob/mRemoteNGProjectFiles/Header_dark.png">
-</p>
   
 <p align="center">
-  An open source, multi-protocol, tabbed remote connections manager allowing you to view all of your connections in a simple yet powerful interface
-</p>
-
-<p align="center">
-  <img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/mremoteng/mremoteng/total?label=Overall%20Downloads&style=for-the-badge">
-</p>
-
-<p align="center">
-  <a href="https://www.reddit.com/r/mRemoteNG/">
-    <img alt="Subreddit subscribers" src="https://img.shields.io/reddit/subreddit-subscribers/mremoteng?label=Reddit&logo=Reddit&style=flat-square">
-  </a>
-  <a href="https://twitter.com/mremoteng">
-    <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/mremoteng?color=%231DA1F2&label=Twitter&logo=Twitter&style=flat-square">
-  </a>
-  <a href="https://app.element.io/#/room/#mremoteng:matrix.org">
-    <img alt="Element" src="https://img.shields.io/matrix/mremoteng:matrix.org?label=Join%20to%20chat%20about%20mRemoteNG&logo=element&style=social&link=https://app.element.io/#/room/#mremoteng:matrix.org">
-  </a>  
-</p>
-
-<p align="center">
-  <a href="https://github.com/mRemoteNG/mRemoteNG/blob/develop/COPYING.TXT">
-    <img alt="License" src="https://img.shields.io/github/license/mremoteng/mremoteng?label=License&style=flat">
-  </a>
-  <a href="https://bestpractices.coreinfrastructure.org/projects/529">
-    <img alt="CII Best Practices" src="https://bestpractices.coreinfrastructure.org/projects/529/badge?style=flat">
-  </a>
-  <a href='https://mremoteng.readthedocs.io/en/latest/?badge=latest'>
-    <img src='https://readthedocs.org/projects/mremoteng/badge/?version=latest' alt='Documentation Status' />
-  </a>
-  <a href="https://gurubase.io/g/mremoteng">
-    <img alt="Gurubase" src="https://img.shields.io/badge/Gurubase-Ask%20mRemoteNG%20Guru-006BFF?style=flat-square">
-  </a>
+  mRemoteNF - An open source, multi-protocol, tabbed remote connections manager allowing you to view all of your connections in a simple yet powerful interface
 </p>
 
 ## Features
@@ -153,13 +106,7 @@ _If you are using the Portable version, simply deleting the folder that contains
 
 If you find mRemoteNF useful and would like to contribute, it would be greatly appreciated. Because this is a security-focused fork, contributions that improve security, fix vulnerabilities, or keep the fork in sync with upstream mRemoteNG are especially welcome.
 
-### Submit Code
-Check out the [Wiki page](https://github.com/mRemoteNG/mRemoteNG/wiki) on how to configure your development environment and submit a pull request.
 
-### Translate
-Check out the [Wiki page](https://github.com/mRemoteNG/mRemoteNG/wiki) on how to help make mRemoteNG a polyglot.
 
 </br>
-<p align="center">
-  <img alt="Developed with ReSharper" src="https://github.com/mRemoteNG/mRemoteNG/blob/mRemoteNGProjectFiles/icon_ReSharper.png">
-</p>
+
