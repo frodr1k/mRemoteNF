@@ -411,7 +411,9 @@ namespace mRemoteNG.UI.Forms
             BringToFront();
             NativeMethods.SetForegroundWindow(Handle);
 
-            PromptForUpdatesPreference();
+            // TEMPORARILY DISABLED: do not prompt the user about checking for updates at startup.
+            // To re-enable, simply uncomment the call below.
+            //PromptForUpdatesPreference();
             await CheckForUpdates();
         }
 

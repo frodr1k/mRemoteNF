@@ -1,3 +1,12 @@
+> ## mRemoteNF
+>
+> **mRemoteNF** is a private, security-focused fork of [mRemoteNG](https://github.com/mRemoteNG/mRemoteNG).
+> The focus of this fork is to close security issues — for example just-in-time (lazy) credential
+> decryption to mitigate CVE-2023-30367 and hardening of the legacy cryptography provider.
+> It tracks upstream mRemoteNG and applies security fixes on top; changes flow one way (upstream → fork).
+
+---
+
 <p align="Left">
 	Developing mRemoteNG to its fullest potential is my personal priority.<br>
 While the project remains non-commercial, it does come with ongoing costs — including VPS hosting for testing, AI tools, domain fees, and more. <br> If you find value in mRemoteNG and want to support its future, even a small donation from our community can make a huge difference.<br>
@@ -52,14 +61,6 @@ Consider donating — every contribution counts!
   </a>
 </p>
 
----
-
-| Channel | Build Status | Downloads |
-| ---------------|--------------|-----------|
-| Stable | ![Build status](https://ci.appveyor.com/api/projects/status/rqwxjxldail7btcf?svg=true) | [![Github Releases (by Release)](https://img.shields.io/github/downloads/mRemoteNG/mRemoteNG/v1.76.20/total.svg)](https://github.com/mRemoteNG/mRemoteNG/releases/tag/v1.76.20) |
-| Preview | ![Build status](https://ci.appveyor.com/api/projects/status/rqwxjxldail7btcf/branch/preview?svg=true) | [![Github Releases (by Release)](https://img.shields.io/github/downloads/mRemoteNG/mRemoteNG/v1.77.1/total.svg)](https://github.com/mRemoteNG/mRemoteNG/releases/tag/v1.77.1) |
-| Nightly | ![Build status](https://ci.appveyor.com/api/projects/status/rqwxjxldail7btcf/branch/develop?svg=true) | [![Github Releases](https://img.shields.io/github/downloads/mRemoteNG/mRemoteNG/20250916-v1.78.2-NB-(3177)/total.svg)](https://github.com/mRemoteNG/mRemoteNG/releases/tag/20250916-v1.78.2-NB-(3177)) |
-
 ## Features
 
 The following protocols are supported:
@@ -90,7 +91,7 @@ For a detailed feature list and general usage support, refer to the [Documentati
 
 #### Source package
 
-This contains the source code from which mRemoteNG is built.
+This contains the source code from which mRemoteNF is built.
 You will need to compile it yourself using Visual Studio.
 
 ### Minimum Requirements
@@ -108,13 +109,13 @@ Make sure you have the latest version installed:
 
 > :star: Starting Windows 11 you can use winget to install mRemoteNG. Just run `winget install -e --id mRemoteNG.mRemoteNG`
 
-mRemoteNG is available as a redistributable MSI package or as a portable ZIP package and can be downloaded from the following locations:
+mRemoteNF is available as a redistributable MSI package or as a portable ZIP package and can be downloaded from the following locations:
 * [GitHub](https://github.com/mRemoteNG/mRemoteNG/releases)
 * [Project Website](https://mremoteng.org/download)
 
 ### Command line install
 
-The MSI package of mRemoteNG can be installed using the command line:
+The MSI package of mRemoteNF can be installed using the command line:
 
 `msiexec /i [/qn] C:\Path\To\mRemoteNG-Installer.exe [INSTALLDIR=value] [IGNOREPREREQUISITES=value] [/lv* <log path>]`
 
@@ -150,7 +151,7 @@ _If you are using the Portable version, simply deleting the folder that contains
 
 ## Contribute
 
-If you find mRemoteNG useful and would like to contribute, it would be greatly appreciated. When you contribute, you make it possible for the team to cover the costs of producing mRemoteNG.
+If you find mRemoteNF useful and would like to contribute, it would be greatly appreciated. Because this is a security-focused fork, contributions that improve security, fix vulnerabilities, or keep the fork in sync with upstream mRemoteNG are especially welcome.
 
 ### Submit Code
 Check out the [Wiki page](https://github.com/mRemoteNG/mRemoteNG/wiki) on how to configure your development environment and submit a pull request.
