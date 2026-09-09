@@ -22,6 +22,12 @@ public class PasswordstateInterface
         public static bool ssSSO = false;
         public static bool initdone = false;
 
+        // Session-only: when true the user has explicitly acknowledged that any
+        // TLS certificate presented by the Passwordstate server should be
+        // accepted (expired, self-signed, name mismatch, ...). Never persisted
+        // to disk; it must be re-confirmed every time the application starts.
+        public static bool ssTrustInvalidCert = false;
+
         //token 
         //public static string ssTokenBearer = "";
         //public static DateTime ssTokenExpiresOn = DateTime.UtcNow;
@@ -59,6 +65,7 @@ public class PasswordstateInterface
                 else
                     ssSSO = true;
                 f.cbUseSSO.Checked = ssSSO;
+                f.cbTrustInvalidCert.Checked = ssTrustInvalidCert;
                 
                 // show dialog
                 while (true)
@@ -74,7 +81,21 @@ public class PasswordstateInterface
                     ssUrl = f.tbServerURL.Text;
                     ssSSO = f.cbUseSSO.Checked;
                     ssOTP = f.tbOTP.Text;
+                    ssTrustInvalidCert = f.cbTrustInvalidCert.Checked;
                     ssOTPTimeStampExpiration = DateTime.Now.AddSeconds(30);
+
+                    // Warn (but do not block) when the endpoint is plain HTTP:
+                    // the API key and retrieved secrets would travel unencrypted.
+                    if (ssUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        MessageBox.Show(
+                            "The Passwordstate URL uses plain HTTP. Your API key and any " +
+                            "retrieved secrets will be sent unencrypted over the network.\r\n\r\n" +
+                            "Use an https:// URL whenever possible.",
+                            "Insecure connection (HTTP)",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+
                     // check connection first
                     try
                     {
@@ -111,13 +132,31 @@ public class PasswordstateInterface
     {
         return ConnectionTest();
     }
+
+    /// <summary>
+    /// Creates an <see cref="HttpClient"/> for the Passwordstate API. When the
+    /// user has opted in for this session, invalid server certificates are
+    /// accepted; otherwise the platform's default (strict) TLS validation
+    /// applies. The certificate bypass is scoped to this handler only - it does
+    /// not affect TLS validation anywhere else in the application.
+    /// </summary>
+    private static HttpClient CreateClient(bool useDefaultCredentials)
+    {
+        var handler = new HttpClientHandler();
+        if (useDefaultCredentials)
+            handler.UseDefaultCredentials = true;
+        if (CPSConnectionData.ssTrustInvalidCert)
+            handler.ServerCertificateCustomValidationCallback =
+                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+        return new HttpClient(handler);
+    }
     private static bool ConnectionTest()
     {
         if (CPSConnectionData.ssSSO)
         {
             string url = $"{CPSConnectionData.ssUrl}/winapi/passwordlists/";
 
-            using HttpClient client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
+            using HttpClient client = CreateClient(useDefaultCredentials: true);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Add("User-Agent", "mRemote");
             client.DefaultRequestHeaders.Add("OTP", CPSConnectionData.ssOTP);
@@ -131,7 +170,7 @@ public class PasswordstateInterface
         else
         {
             string url = $"{CPSConnectionData.ssUrl}/api/passwordlists/";
-            using HttpClient client = new HttpClient();
+            using HttpClient client = CreateClient(useDefaultCredentials: false);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Add("User-Agent", "mRemote");
             client.DefaultRequestHeaders.Add("APIKey", CPSConnectionData.ssPassword);
@@ -149,7 +188,7 @@ public class PasswordstateInterface
     {
         string url = $"{CPSConnectionData.ssUrl}/winapi/passwords/{secretID}";
 
-        using HttpClient client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
+        using HttpClient client = CreateClient(useDefaultCredentials: true);
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Add("User-Agent", "mRemote");
         client.DefaultRequestHeaders.Add("OTP", CPSConnectionData.ssOTP);
@@ -165,7 +204,7 @@ public class PasswordstateInterface
     {
         string url = $"{CPSConnectionData.ssUrl}/api/passwords/{secretID}";
 
-        using HttpClient client = new HttpClient();
+        using HttpClient client = CreateClient(useDefaultCredentials: false);
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Add("User-Agent", "mRemote");
         client.DefaultRequestHeaders.Add("APIKey", CPSConnectionData.ssPassword);

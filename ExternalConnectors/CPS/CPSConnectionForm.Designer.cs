@@ -39,6 +39,7 @@
             label6 = new Label();
             tbOTP = new TextBox();
             cbUseSSO = new CheckBox();
+            cbTrustInvalidCert = new CheckBox();
             tableLayoutPanel2 = new TableLayoutPanel();
             label4 = new Label();
             tableLayoutPanel1.SuspendLayout();
@@ -112,6 +113,8 @@
             tableLayoutPanel1.Controls.Add(label6, 0, 3);
             tableLayoutPanel1.Controls.Add(tbOTP, 1, 3);
             tableLayoutPanel1.Controls.Add(cbUseSSO, 0, 1);
+            tableLayoutPanel1.Controls.Add(cbTrustInvalidCert, 0, 4);
+            tableLayoutPanel1.SetColumnSpan(cbTrustInvalidCert, 2);
             tableLayoutPanel1.Dock = DockStyle.Top;
             tableLayoutPanel1.Location = new Point(0, 0);
             tableLayoutPanel1.Margin = new Padding(5);
@@ -168,6 +171,17 @@
             cbUseSSO.Text = "Use SSO / WinAuth";
             cbUseSSO.UseVisualStyleBackColor = true;
             cbUseSSO.CheckedChanged += cbUseSSO_CheckedChanged;
+            // 
+            // cbTrustInvalidCert
+            // 
+            cbTrustInvalidCert.Anchor = AnchorStyles.Left;
+            cbTrustInvalidCert.AutoSize = true;
+            cbTrustInvalidCert.Margin = new Padding(5, 5, 5, 0);
+            cbTrustInvalidCert.Name = "cbTrustInvalidCert";
+            cbTrustInvalidCert.Size = new Size(300, 24);
+            cbTrustInvalidCert.TabIndex = 16;
+            cbTrustInvalidCert.Text = "Trust invalid TLS certificate (this session only)";
+            cbTrustInvalidCert.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel2
             // 
@@ -234,6 +248,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         public System.Windows.Forms.CheckBox cbUseSSO;
+        public System.Windows.Forms.CheckBox cbTrustInvalidCert;
         private System.Windows.Forms.Label label4;
         private Label label6;
         public TextBox tbOTP;
