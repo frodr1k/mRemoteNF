@@ -18,7 +18,7 @@ using System.Resources;
 [assembly: AssemblyConfiguration("x64")]
 [assembly: AssemblyCompany("mRemoteNF")]
 [assembly: AssemblyProduct("mRemoteNF Connection Manager")]
-[assembly: AssemblyCopyright("(c) 2026 mRemoteNG")]
+[assembly: AssemblyCopyright("Built upon hard work by the mRemoteNG team")]
 [assembly: AssemblyTrademark("mRemoteNF")]
 [assembly: AssemblyCulture("")]
 

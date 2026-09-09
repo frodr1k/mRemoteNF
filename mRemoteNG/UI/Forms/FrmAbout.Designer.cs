@@ -5,7 +5,6 @@
         #region  Windows Form Designer generated code
         private void InitializeComponent()
         {
-            pbLogo = new System.Windows.Forms.PictureBox();
             pnlBottom = new System.Windows.Forms.Panel();
             llCredits = new System.Windows.Forms.LinkLabel();
             llChangelog = new System.Windows.Forms.LinkLabel();
@@ -14,22 +13,8 @@
             lblVersion = new Controls.MrngLabel();
             lblLicense = new Controls.MrngLabel();
             lblCopyright = new Controls.MrngLabel();
-            ((System.ComponentModel.ISupportInitialize)pbLogo).BeginInit();
             pnlBottom.SuspendLayout();
             SuspendLayout();
-            // 
-            // pbLogo
-            // 
-            pbLogo.BackColor = System.Drawing.Color.FromArgb(52, 58, 64);
-            pbLogo.BackgroundImage = Properties.Resources.Header_dark;
-            pbLogo.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            pbLogo.Dock = System.Windows.Forms.DockStyle.Top;
-            pbLogo.Location = new System.Drawing.Point(0, 0);
-            pbLogo.Name = "pbLogo";
-            pbLogo.Size = new System.Drawing.Size(584, 120);
-            pbLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
-            pbLogo.TabIndex = 1;
-            pbLogo.TabStop = false;
             // 
             // pnlBottom
             // 
@@ -43,7 +28,7 @@
             pnlBottom.Controls.Add(lblCopyright);
             pnlBottom.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlBottom.ForeColor = System.Drawing.SystemColors.ControlText;
-            pnlBottom.Location = new System.Drawing.Point(0, 120);
+            pnlBottom.Location = new System.Drawing.Point(0, 0);
             pnlBottom.Name = "pnlBottom";
             pnlBottom.Size = new System.Drawing.Size(584, 161);
             pnlBottom.TabIndex = 1;
@@ -93,7 +78,7 @@
             lblTitle.Name = "lblTitle";
             lblTitle.Size = new System.Drawing.Size(149, 27);
             lblTitle.TabIndex = 0;
-            lblTitle.Text = "Fructus temporum";
+            lblTitle.Text = "mRemoteNF";
             lblTitle.UseCompatibleTextRendering = true;
             // 
             // lblVersion
@@ -137,15 +122,13 @@
             AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             BackColor = System.Drawing.SystemColors.Control;
-            ClientSize = new System.Drawing.Size(584, 281);
+            ClientSize = new System.Drawing.Size(584, 161);
             Controls.Add(pnlBottom);
-            Controls.Add(pbLogo);
             Font = new System.Drawing.Font("Segoe UI", 8.25F);
             ForeColor = System.Drawing.SystemColors.ControlText;
             Name = "frmAbout";
             Text = "About";
             TabText = "About";
-            ((System.ComponentModel.ISupportInitialize)pbLogo).EndInit();
             pnlBottom.ResumeLayout(false);
             pnlBottom.PerformLayout();
             ResumeLayout(false);
@@ -158,7 +141,6 @@
         internal Controls.MrngLabel lblVersion;
         internal Controls.MrngLabel lblLicense;
         internal System.Windows.Forms.Panel pnlBottom;
-        internal System.Windows.Forms.PictureBox pbLogo;
         private System.Windows.Forms.LinkLabel llCredits;
         private System.Windows.Forms.LinkLabel llChangelog;
         private System.Windows.Forms.LinkLabel llLicense;
