@@ -61,6 +61,20 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Xml
                     {
                         return null;
                     }
+
+                    // When no custom password is set the file is encrypted with a
+                    // well-known, hard-coded default key. Anyone who obtains the
+                    // file (backup, cloud sync, stolen device) can then decrypt
+                    // every stored credential offline. Surface a non-modal warning
+                    // (notification panel only - never a dialog, so automated and
+                    // scheduled saves are not interrupted) nudging the user to set
+                    // a custom password via the root node's "Password protect".
+                    if (!_rootNodeInfo.Password)
+                        Runtime.MessageCollector.AddMessage(MessageClass.WarningMsg,
+                            "The connections file is protected only by the built-in default key. " +
+                            "Stored credentials can be decrypted by anyone who obtains this file. " +
+                            "Set a custom password on the root \"Connections\" node to protect it.",
+                            true);
                 }
 
                 if (_confVersion >= 2.6)

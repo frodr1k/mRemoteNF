@@ -3,7 +3,9 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
+using System.Net.Security;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -45,7 +47,7 @@ public class PasswordstateInterface
             if (initdone == true)
                 return;
 
-            RegistryKey key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\mRemoteCPSInterface");
+            RegistryKey key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\mRemoteNF_CPSInterface");
             try
             {
                 // display gui and ask for data
@@ -84,10 +86,23 @@ public class PasswordstateInterface
                     ssTrustInvalidCert = f.cbTrustInvalidCert.Checked;
                     ssOTPTimeStampExpiration = DateTime.Now.AddSeconds(30);
 
-                    // Warn (but do not block) when the endpoint is plain HTTP:
-                    // the API key and retrieved secrets would travel unencrypted.
+                    // Enforce transport security. When the endpoint is plain HTTP the
+                    // API key and retrieved secrets would travel unencrypted.
                     if (ssUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
                     {
+                        if (IsHttpsRequiredByPolicy())
+                        {
+                            // An administrator has enforced HTTPS-only via group policy;
+                            // block plain HTTP and re-prompt for a valid https:// URL.
+                            MessageBox.Show(
+                                "Plain HTTP connections to Passwordstate are blocked by your " +
+                                "organization's policy. Enter an https:// URL to continue.",
+                                "HTTP blocked by policy",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            continue;
+                        }
+
+                        // Not enforced by policy: warn but allow.
                         MessageBox.Show(
                             "The Passwordstate URL uses plain HTTP. Your API key and any " +
                             "retrieved secrets will be sent unencrypted over the network.\r\n\r\n" +
@@ -126,6 +141,31 @@ public class PasswordstateInterface
                 key.Close();
             }
         }
+
+        /// <summary>
+        /// Returns true when an administrator has enforced HTTPS-only connections
+        /// to Passwordstate through group policy. The value is read from the
+        /// managed policy hive that Group Policy writes to and that standard
+        /// users cannot modify:
+        ///   SOFTWARE\Policies\mRemoteNG\Passwordstate\RequireHttps (DWORD)
+        /// The machine policy (HKLM) takes precedence; when it is absent the
+        /// per-user policy (HKCU) is consulted. A value other than 0 blocks
+        /// plain HTTP and forces the use of an https:// URL.
+        /// </summary>
+        private static bool IsHttpsRequiredByPolicy()
+        {
+            const string policyPath = @"SOFTWARE\Policies\mRemoteNF\Passwordstate";
+            const string valueName = "RequireHttps";
+
+            foreach (RegistryKey root in new[] { Registry.LocalMachine, Registry.CurrentUser })
+            {
+                using RegistryKey? policyKey = root.OpenSubKey(policyPath);
+                if (policyKey?.GetValue(valueName) is int dword)
+                    return dword != 0;
+            }
+
+            return false;
+        }
     }
 
     private static bool TestCredentials()
@@ -135,10 +175,12 @@ public class PasswordstateInterface
 
     /// <summary>
     /// Creates an <see cref="HttpClient"/> for the Passwordstate API. When the
-    /// user has opted in for this session, invalid server certificates are
-    /// accepted; otherwise the platform's default (strict) TLS validation
-    /// applies. The certificate bypass is scoped to this handler only - it does
-    /// not affect TLS validation anywhere else in the application.
+    /// user has opted in for this session, an expired or otherwise untrusted
+    /// certificate chain is tolerated; otherwise the platform's default (strict)
+    /// TLS validation applies. A hostname mismatch is ALWAYS rejected - that is
+    /// the exact condition a man-in-the-middle needs, so the opt-in must never
+    /// weaken it. The certificate bypass is scoped to this handler only - it
+    /// does not affect TLS validation anywhere else in the application.
     /// </summary>
     private static HttpClient CreateClient(bool useDefaultCredentials)
     {
@@ -146,9 +188,27 @@ public class PasswordstateInterface
         if (useDefaultCredentials)
             handler.UseDefaultCredentials = true;
         if (CPSConnectionData.ssTrustInvalidCert)
-            handler.ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            handler.ServerCertificateCustomValidationCallback = TrustAllExceptNameMismatch;
         return new HttpClient(handler);
+    }
+
+    /// <summary>
+    /// Certificate validation callback used when the user has opted in to trust
+    /// an invalid TLS certificate. It tolerates chain/time errors (expired,
+    /// self-signed) but never a hostname mismatch, which would indicate a
+    /// man-in-the-middle serving a certificate for a different host.
+    /// </summary>
+    private static bool TrustAllExceptNameMismatch(
+        HttpRequestMessage request, X509Certificate2? certificate, X509Chain? chain, SslPolicyErrors errors)
+    {
+        if (errors == SslPolicyErrors.None)
+            return true;
+
+        // A hostname mismatch is never tolerated, even with the opt-in enabled.
+        if ((errors & SslPolicyErrors.RemoteCertificateNameMismatch) != 0)
+            return false;
+
+        return true;
     }
     private static bool ConnectionTest()
     {

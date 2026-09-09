@@ -260,6 +260,7 @@ namespace mRemoteNG.Connection.Protocol
                             if (!string.IsNullOrEmpty(privatekey))
                             {
                                 optionalTemporaryPrivateKeyPath = Path.GetTempFileName();
+                                RestrictFileToCurrentUser(optionalTemporaryPrivateKeyPath);
                                 File.WriteAllText(optionalTemporaryPrivateKeyPath, privatekey);
                                 FileInfo fileInfo = new(optionalTemporaryPrivateKeyPath)
                                 {
@@ -377,7 +378,23 @@ namespace mRemoteNG.Connection.Protocol
                 // add additional SSH options, f.e. tunnel or noshell parameters that may be specified for the the connnection
                 if (!string.IsNullOrEmpty(InterfaceControl.Info.SSHOptions))
                 {
-                    PuttyProcess.StartInfo.Arguments += " " + InterfaceControl.Info.SSHOptions;
+                    // SSHOptions is appended verbatim to the PuTTY command line. A
+                    // malicious/imported connection could smuggle flags that execute
+                    // remote commands (-m) or override authentication (-pw/-pwfile/-i/
+                    // -auth-plugin). Reject the whole SSHOptions string (fail-safe:
+                    // still connect, just ignore the options) when such a flag is
+                    // present, while leaving legitimate tunnel flags (-L/-R/-D/-N/...) intact.
+                    if (ContainsDangerousPuttyOption(InterfaceControl.Info.SSHOptions))
+                    {
+                        Runtime.MessageCollector.AddMessage(MessageClass.WarningMsg,
+                            "Ignoring SSH options for this connection because they contain a disallowed " +
+                            "flag (one of -m, -pw, -pwfile, -i, -auth-plugin) that could execute commands " +
+                            "or override authentication.", true);
+                    }
+                    else
+                    {
+                        PuttyProcess.StartInfo.Arguments += " " + InterfaceControl.Info.SSHOptions;
+                    }
                 }
 
                 PuttyProcess.EnableRaisingEvents = true;
@@ -525,8 +542,87 @@ namespace mRemoteNG.Connection.Protocol
                 if (!string.IsNullOrEmpty(optionalTemporaryPrivateKeyPath))
                 {
                     System.Threading.Thread.Sleep(500);
-                    System.IO.File.Delete(optionalTemporaryPrivateKeyPath);
+                    SecureDeleteFile(optionalTemporaryPrivateKeyPath);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Checks whether a user-supplied SSHOptions string contains a PuTTY flag
+        /// that could execute remote commands or override authentication. Only
+        /// these clearly dangerous flags are blocked; legitimate options such as
+        /// tunnels (-L/-R/-D), -N, -X, -A, -C remain allowed.
+        /// </summary>
+        private static bool ContainsDangerousPuttyOption(string sshOptions)
+        {
+            // PuTTY flags are case-sensitive and space-separated on the command line.
+            string[] blockedFlags = { "-m", "-pw", "-pwfile", "-i", "-auth-plugin" };
+            string[] tokens = sshOptions.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string token in tokens)
+            {
+                foreach (string blocked in blockedFlags)
+                {
+                    if (string.Equals(token, blocked, StringComparison.Ordinal))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Restricts a file so that only the current user (and SYSTEM) can read
+        /// it, removing inherited permissions. Used for the temporary SSH private
+        /// key file so other accounts on the machine cannot read it.
+        /// </summary>
+        private static void RestrictFileToCurrentUser(string path)
+        {
+            try
+            {
+                FileInfo fileInfo = new(path);
+                FileSecurity security = new();
+                SecurityIdentifier user = WindowsIdentity.GetCurrent().User!;
+                SecurityIdentifier system = new(WellKnownSidType.LocalSystemSid, null);
+                security.SetOwner(user);
+                security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+                security.AddAccessRule(new FileSystemAccessRule(user, FileSystemRights.FullControl, AccessControlType.Allow));
+                security.AddAccessRule(new FileSystemAccessRule(system, FileSystemRights.FullControl, AccessControlType.Allow));
+                fileInfo.SetAccessControl(security);
+            }
+            catch (Exception ex)
+            {
+                Runtime.MessageCollector.AddMessage(MessageClass.WarningMsg,
+                    "Could not restrict permissions on the temporary SSH key file: " + ex.Message, true);
+            }
+        }
+
+        /// <summary>
+        /// Overwrites a file's contents with random data before deleting it, so
+        /// the plaintext private key cannot be trivially recovered from disk.
+        /// </summary>
+        private static void SecureDeleteFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    long length = new FileInfo(path).Length;
+                    if (length > 0)
+                    {
+                        byte[] noise = new byte[length];
+                        System.Security.Cryptography.RandomNumberGenerator.Fill(noise);
+                        File.WriteAllBytes(path, noise);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Runtime.MessageCollector.AddMessage(MessageClass.WarningMsg,
+                    "Could not overwrite the temporary SSH key file before deletion: " + ex.Message, true);
+            }
+            finally
+            {
+                try { File.Delete(path); } catch { /* best effort */ }
             }
         }
 

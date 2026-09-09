@@ -61,7 +61,7 @@ namespace mRemoteNG.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("50000")]
         public int EncryptionKeyDerivationIterations {
             get {
                 return ((int)(this["EncryptionKeyDerivationIterations"]));
