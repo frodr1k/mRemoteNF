@@ -4,6 +4,7 @@
 > The focus of this fork is to close security issues — for example just-in-time (lazy) credential
 > decryption to mitigate CVE-2023-30367 and hardening of the legacy cryptography provider.
 > It tracks upstream mRemoteNG and applies security fixes on top; changes flow one way (upstream → fork).
+> It's with great gratitude I use the work of previous teams.
 
 ---
 
@@ -79,11 +80,10 @@ Make sure you have the latest version installed:
 
 ### Download
 
-> :star: Starting Windows 11 you can use winget to install mRemoteNG. Just run `winget install -e --id mRemoteNG.mRemoteNG`
 
 mRemoteNF is available as a redistributable MSI package or as a portable ZIP package and can be downloaded from the following locations:
-* [GitHub](https://github.com/mRemoteNG/mRemoteNG/releases)
-* [Project Website](https://mremoteng.org/download)
+* [GitHub](https://github.com/mRemoteNG/mRemoteNF/releases)
+
 
 ### Command line install
 
@@ -97,23 +97,6 @@ The MSI package of mRemoteNF can be installed using the command line:
 | /lv* | `Silent Installation` | Will write a logfile to the specified location. (For paths that contain spaces, enclose the path in double quotes) |
 | INSTALLDIR | `folder path` | Allows you to set the installation directory from the command line. (For paths that contain spaces, enclose the path in double quotes) |
 | IGNOREPREREQUISITES | `0` or `1` | When set to `1`, the installer will not be halted if any prerequisite check is not met. You must still run the installer as administrator. |
-
-## Manual Uninstall
-
-_If you are using the Portable version, simply deleting the folder that contains mRemoteNG should be sufficient. These uninstall instructions are only necessary for the normal binary .MSI installed version of mRemoteNG_
-
-* Delete the folder where mRemoteNG was installed. By default, this is:
-	`%PROGRAMFILES%\mRemoteNG` (for versions before 1.77 on a x64 Windows its `%programfiles(x86)%\mRemoteNG`)
-
-* Delete the mRemoteNG install entry from the following location. You may search for "mRemoteNG" in the DisplayName field:
-  * x86 Windows or mRemoteNG starting with v1.77: `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\`
-  * x64 Windows and mRemoteNG before 1.77: `HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\`
-* Remove the following registry key: `HKLM\SOFTWARE\mRemoteNG` (on x64 Windows with mRemoteNG before 1.77 it's `HKLM\SOFTWARE\WOW6432Node\mRemoteNG`)
-
-* (Optional) If you would also like to delete user data remove `%LOCALAPPDATA%\mRemoteNG`
-* (Optional) If you would also like to remove the connection configuration, delete `%APPDATA%\mRemoteNG`
-
-* (Optional) If no other software uses it, the "Microsoft Windows Desktop Runtime" may be uninstalled too.
 
 ## Featured Projects
 
