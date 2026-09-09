@@ -13,13 +13,13 @@ using System.Resources;
 //Build nr: 3692
 
 // General Information
-[assembly: AssemblyTitle("mRemoteNG")]
+[assembly: AssemblyTitle("mRemoteNF")]
 [assembly: AssemblyDescription("Multi-Remote Next Generation Connection Manager")]
 [assembly: AssemblyConfiguration("x64")]
-[assembly: AssemblyCompany("Profi-KOM Ltd.")]
-[assembly: AssemblyProduct("mRemoteNG Connection Manager")]
+[assembly: AssemblyCompany("mRemoteNF")]
+[assembly: AssemblyProduct("mRemoteNF Connection Manager")]
 [assembly: AssemblyCopyright("(c) 2026 mRemoteNG")]
-[assembly: AssemblyTrademark("Profi-KOM LTd.")]
+[assembly: AssemblyTrademark("mRemoteNF")]
 [assembly: AssemblyCulture("")]
 
 // Version information

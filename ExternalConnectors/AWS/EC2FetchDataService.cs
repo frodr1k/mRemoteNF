@@ -79,7 +79,7 @@ namespace ExternalConnectors.AWS
 
         public static class AWSConnectionData
         {
-            private static readonly RegistryKey key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\mRemoteAWSInterface");
+            private static readonly RegistryKey key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\mRemoteNF_AWSInterface");
 
             public static string awsKeyID = "";
             public static string awsKey = "";

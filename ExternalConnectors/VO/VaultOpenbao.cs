@@ -11,7 +11,7 @@ namespace ExternalConnectors.VO {
     }
 
     public static class VaultOpenbao {
-        private static readonly RegistryKey baseKey = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\mRemoteVaultOpenbao");
+        private static readonly RegistryKey baseKey = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\mRemoteNF_VaultOpenbao");
         private static string token = "";
         private static VaultClient GetClient() {
             string url = (string)baseKey.GetValue("URL", "");
