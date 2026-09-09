@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
-  <?define ProductName = "mRemoteNG" ?>
-  <?define Company = "Profi-Kom Ltd." ?>
-  <?define UpgradeCode = "dd678a54-ca75-4791-8dfe-d818095684f8" ?>
+  <?define ProductName = "mRemoteNF" ?>
+  <?define Company = "mRemoteNF" ?>
+  <?define UpgradeCode = "1b9a5f4f-bbe2-4350-bd61-c5cbd4b853fe" ?>
   <?define ProductCode = "*" ?>
   <?define ProductVersion = "!(bind.FileVersion.MainExeFile)" ?>
   <?define MajorVersion = "!(bind.property.ProductVersion.Major)" ?>

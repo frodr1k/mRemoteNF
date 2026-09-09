@@ -7,12 +7,13 @@
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <AssemblyName>mRemoteNF</AssemblyName>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <TransformOnBuild>true</TransformOnBuild>
     <TransformOutOfDateOnly>false</TransformOutOfDateOnly>
     <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
-    <ApplicationIcon>Icons\mRemoteNG.ico</ApplicationIcon>
+    <ApplicationIcon>Icons\mRemoteNF.ico</ApplicationIcon>
     <Version>1.78.2-dev</Version>
     <Description>Multi-protocol remote connections manager</Description>
     <Copyright>$([System.DateTime]::Now.Year) mRemoteNG Dev Team, 2010-2013 Riley McArdle, 2007-2009 Felix Deimel</Copyright>
@@ -335,7 +336,7 @@
     <None Update="Icons\mRemote.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Icons\mRemoteNG.ico">
+    <None Update="Icons\mRemoteNF.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Icons\PowerShell.ico">
@@ -453,7 +454,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Update="mRemoteNG.VisualElementsManifest.xml">
+    <None Update="mRemoteNF.VisualElementsManifest.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Properties\AppUI.settings">
