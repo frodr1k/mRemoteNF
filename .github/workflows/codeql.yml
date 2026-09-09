@@ -1,0 +1,78 @@
+name: CodeQL SAST
+
+# Static Application Security Testing (SAST) for mRemoteNF.
+#
+# Unlike the dependency scan (which only inspects third-party components),
+# CodeQL analyses the project's own C# source for security weaknesses such as
+# injection, insecure deserialization, path traversal, hard-coded secrets and
+# unsafe cryptography. Results appear under Security -> Code scanning.
+#
+# NOTE: Uploading results requires GitHub code scanning (Advanced Security).
+# On repositories where it is not enabled the analyze step is tolerated so the
+# workflow does not fail.
+
+on:
+  push:
+    branches:
+      - v1.78.2-dev
+  pull_request:
+    branches:
+      - v1.78.2-dev
+  schedule:
+    # Weekly, Monday 05:00 UTC
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze C#
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          # security-and-quality adds maintainability queries on top of the
+          # default security query suite.
+          queries: security-and-quality
+          build-mode: manual
+
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Transform T4 templates (AssemblyInfo)
+        shell: pwsh
+        run: |
+          dotnet tool install --global dotnet-t4
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
+          $ttFile = "$env:GITHUB_WORKSPACE\mRemoteNG\Properties\AssemblyInfo.tt"
+          $vsPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\PublicAssemblies"
+          Write-Host "Transforming T4 template"
+          t4 $ttFile -P platformType=x64 -r:"$vsPath\EnvDTE.dll" -r:"$vsPath\Microsoft.VisualStudio.Interop.dll"
+
+      - name: Restore NuGet packages
+        shell: pwsh
+        run: dotnet restore mRemoteNG.sln
+
+      - name: Build (manual, for CodeQL)
+        shell: pwsh
+        run: |
+          # CodeQL observes this build to construct its analysis database.
+          # Only the main app is needed for SAST; tests/specs are excluded.
+          msbuild mRemoteNG\mRemoteNG.csproj -p:Configuration=Release -p:Platform=x64 -verbosity:minimal
+
+      - name: Perform CodeQL Analysis
+        # Tolerate repositories without code scanning (Advanced Security).
+        continue-on-error: true
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"

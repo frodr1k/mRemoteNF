@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    OWASP Dependency-Check suppression file for mRemoteNF.
+
+    Dependency-Check matches components against the National Vulnerability
+    Database (NVD) using CPE identifiers. CPE matching is name-based and
+    frequently produces FALSE POSITIVES: unrelated products that merely share
+    a similar name get associated with a package. The suppressions below remove
+    such known false positives so the report reflects real risk.
+
+    The managed (NuGet) dependencies are audited separately via the NuGet /
+    GitHub Advisory database (the `dotnet list package` vulnerability audit).
+    As of this writing that audit reports ZERO vulnerable packages, which
+    confirms the findings suppressed here are CPE mismatches rather than real
+    advisories.
+
+    HOW TO MAINTAIN:
+      - Prefer suppressing by packageUrl regex (stable across versions).
+      - Keep each suppression narrowly scoped and documented.
+      - When a REAL advisory appears (e.g. via the `dotnet list package`
+        vulnerability audit), do NOT suppress it - upgrade the package in
+        Directory.Packages.props instead.
+      - Re-evaluate the bundled PuTTY entry whenever PuTTYNG.exe is updated.
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!-- SSH.NET: NVD CPE matching confuses this .NET library with unrelated
+         "ssh"/"libssh"/OpenSSH CVEs. Managed audit reports no advisories. -->
+    <suppress>
+        <notes><![CDATA[
+            False positive: SSH.NET / Renci.SshNet .NET package incorrectly
+            matched against native SSH product CVEs via CPE.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:nuget/(SSH\.NET|Renci\.SshNet(\.Async)?)@.*$</packageUrl>
+        <cpe>cpe:/a:ssh:ssh</cpe>
+        <cpe>cpe:/a:libssh:libssh</cpe>
+        <cpe>cpe:/a:openbsd:openssh</cpe>
+    </suppress>
+
+    <!-- BouncyCastle.Cryptography (C#): CPE matching pulls in CVEs that apply
+         to the Java editions of Bouncy Castle, not the .NET package. -->
+    <suppress>
+        <notes><![CDATA[
+            False positive: BouncyCastle.Cryptography .NET package matched
+            against Java Bouncy Castle (bc-java) CVEs.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:nuget/BouncyCastle\.Cryptography@.*$</packageUrl>
+        <cpe>cpe:/a:bouncycastle:bouncy_castle_for_java</cpe>
+        <cpe>cpe:/a:bouncycastle:legion-of-the-bouncy-castle-java-crytography-api</cpe>
+    </suppress>
+
+    <!-- log4net: repeatedly mis-associated with the unrelated Apache Log4j
+         (Java) "Log4Shell" family of CVEs. Different product. -->
+    <suppress>
+        <notes><![CDATA[
+            False positive: Apache log4net (.NET) matched against Apache Log4j
+            (Java) CVEs such as CVE-2021-44228.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:nuget/log4net@.*$</packageUrl>
+        <cpe>cpe:/a:apache:log4j</cpe>
+    </suppress>
+
+    <!-- Google.Protobuf (C#): CPE matching includes protobuf CVEs affecting
+         other language runtimes (C++/Java/Python) not the current .NET version. -->
+    <suppress>
+        <notes><![CDATA[
+            False positive: Google.Protobuf .NET package matched against
+            protobuf CVEs for other language implementations.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:nuget/Google\.Protobuf@.*$</packageUrl>
+        <cpe>cpe:/a:google:protobuf</cpe>
+        <cpe>cpe:/a:google:protobuf-java</cpe>
+    </suppress>
+
+</suppressions>

@@ -44,8 +44,11 @@ jobs:
           project: mRemoteNG
           path: .
           format: SARIF
+          # Suppress known CPE false positives (see the suppression file for
+          # rationale). Real advisories are handled by upgrading packages.
           args: >-
             --enableExperimental
+            --suppression .github/dependency-check-suppression.xml
         env:
           # Optional: set an NVD API key (repository secret) to speed up the
           # vulnerability database download and avoid rate limiting.
